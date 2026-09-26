@@ -14,10 +14,9 @@ import {
 import { loginSchema } from "@/validation";
 import { useState } from "react";
 import { Eye, EyeClosed } from "lucide-react";
-import { useGoogleOAuth, useLogin } from "@/hooks";
+import { useLogin } from "@/hooks";
 import { useRouter } from "next/navigation";
-import {toast} from "sonner"
-import { GoogleLogin } from "@react-oauth/google";
+import { toast } from "sonner";
 import Link from "next/link";
 import {Spinner} from "../ui/spinner"
 
@@ -29,8 +28,8 @@ export default function LoginForm() {
 
   const form = useForm({
     defaultValues: {
-      email: "superadmin@gmail.com",
-      password: "Super@admin12345",
+      email: "admin@test.com",
+      password: "password123",
     },
     validators: {
       onSubmit: loginSchema,
@@ -43,20 +42,11 @@ export default function LoginForm() {
 
       login(loginData, {
         onSuccess: (res) => {
-          toast.add({
-            title: "Login Success",
-            description: "Welcome back",
-            type: "success",
-          });
+          toast.success("Login successful");
           router.push("/");
         },
         onError: (err) => {
-          toast.add({
-            title: "Authorization failure",
-            description:
-              err.message || "Something went wrong. Please try again",
-            type: "error",
-          });
+          toast.warning("Something went wrong. Please try again.");
         },
       });
     },
