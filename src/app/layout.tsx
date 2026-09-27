@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import Providers from "@/providers";
 import { Toaster } from "@/components/ui/sonner";
 import Navbar from "@/components/layout/public/Navbar";
+import Footer from "@/components/modules/homepage/Footer";
 
 const outfitHeading = Outfit({subsets:['latin'],variable:'--font-heading'});
 
@@ -34,8 +35,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <Providers>
         <body className="min-h-full flex flex-col">
            <Navbar />
-          {children}
-          <Toaster />          
+          <main className="flex-1">{children}</main>
+          <Toaster />   
+          <Footer />       
         </body>
       </Providers>
     </html>
