@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import Providers from "@/providers";
 import { Toaster } from "@/components/ui/sonner";
+import Navbar from "@/components/layout/public/Navbar";
 
 const outfitHeading = Outfit({subsets:['latin'],variable:'--font-heading'});
 
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <Providers>
         <body className="min-h-full flex flex-col">
+           <Navbar />
           {children}
           <Toaster />          
         </body>
