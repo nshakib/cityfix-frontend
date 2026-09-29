@@ -6,29 +6,36 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { useGetMe, useLogout } from "@/hooks/auth.hook";
-import { dashboardRouteByRole } from "@/types/user.type";
+import { dashboardRouteByRole, UserRole } from "@/types/user.type";
 
 const routes = [
   { name: "Home", url: "/" },
   { name: "Track a Complaint", url: "/track" },
   { name: "About us", url: "/about-us" },
 ];
+ const dashboardRoute: Record<UserRole, string> = {
+    SUPER_ADMIN: "/admin",
+    ADMIN: "/admin",
+    STAFF: "/staff",
+    CITIZEN: "/citizen",
+  };
+
 
 export default function Navbar() {
   const { data, isLoading } = useGetMe();
-  const { mutate: logout, isPending: isLoggingOut } = useLogout();
+  const { mutate: logout } = useLogout();
   const queryClient = useQueryClient();
 
-  const user = data?.data;
+  const role: UserRole = !!data?.data && data?.data.role;
 
   const handleLogout = () => {
     logout(undefined, {
       onSuccess: () => {
-        toast.success("Logged out successfully");
+        toast("Logout successful");
         queryClient.removeQueries({ queryKey: ["user"] });
       },
       onError: () => {
-        toast.error("Something went wrong logging out");
+        toast(" Something went wrong. Please try again.");
       },
     });
   };
@@ -53,9 +60,9 @@ export default function Navbar() {
               {route.name}
             </Link>
           ))}
-          {user && (
+          {role && (
             <Link
-              href={dashboardRouteByRole[user.role]}
+              href={dashboardRouteByRole[role]}
               className="text-muted-foreground transition-colors hover:text-foreground"
             >
               Dashboard
@@ -64,7 +71,7 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-3">
-          {!isLoading && !user && (
+          {!isLoading && !role && (
             <>
               <Button variant="ghost" asChild>
                 <Link href="/login">Log in</Link>
@@ -74,9 +81,9 @@ export default function Navbar() {
               </Button>
             </>
           )}
-          {!isLoading && user && (
-            <Button variant="destructive" onClick={handleLogout} disabled={isLoggingOut}>
-              {isLoggingOut ? "Logging out..." : "Logout"}
+          {!isLoading && role && (
+            <Button variant="destructive" onClick={handleLogout}>
+              Log out
             </Button>
           )}
         </div>
