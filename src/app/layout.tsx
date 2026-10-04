@@ -6,7 +6,6 @@ import Providers from "@/providers";
 import { Toaster } from "@/components/ui/sonner";
 import Navbar from "@/components/layout/public/Navbar";
 import Footer from "@/components/layout/public/Footer";
-import { UserRole } from "@/types/user.type";
 
 const outfitHeading = Outfit({subsets:['latin'],variable:'--font-heading'});
 
@@ -26,7 +25,6 @@ export const metadata: Metadata = {
   title: "CityFix",
   description: "CityFix - City Complaint & Service Management Platform",
 };
-// const role: UserRole = !!data?.data && data?.data.role;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

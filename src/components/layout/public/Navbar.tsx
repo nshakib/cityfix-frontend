@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { useGetMe, useLogout } from "@/hooks/auth.hook";
-import { dashboardRouteByRole, UserRole } from "@/types/user.type";
+import { UserRole } from "@/types/user.type";
 
 const routes = [
   { name: "Home", url: "/" },
@@ -23,6 +23,7 @@ const routes = [
 
 export default function Navbar() {
   const { data, isLoading } = useGetMe();
+  console.log(data);
   const { mutate: logout } = useLogout();
   const queryClient = useQueryClient();
 
@@ -62,7 +63,7 @@ export default function Navbar() {
           ))}
           {role && (
             <Link
-              href={dashboardRouteByRole[role]}
+              href={dashboardRoute[role]}
               className="text-muted-foreground transition-colors hover:text-foreground"
             >
               Dashboard
@@ -71,7 +72,7 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-3">
-          {!isLoading && !role && (
+          {!isLoading && !data && (
             <>
               <Button variant="ghost" asChild>
                 <Link href="/login">Log in</Link>
@@ -81,7 +82,7 @@ export default function Navbar() {
               </Button>
             </>
           )}
-          {!isLoading && role && (
+          {!isLoading && data && (
             <Button variant="destructive" onClick={handleLogout}>
               Log out
             </Button>

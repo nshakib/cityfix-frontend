@@ -1,17 +1,22 @@
 export type UserRole = "SUPER_ADMIN" | "ADMIN" | "STAFF" | "CITIZEN";
 
-export type MeResponseData = {
-  id: string;
-  email: string;
-  role: UserRole;
-  status: "ACTIVE" | "BLOCKED" | "DELETED";
-};
+export type UserStatus = "ACTIVE" | "BLOCKED" | "DELETED";
  
-// Where the navbar sends a logged-in user when they click "Dashboard"
-export const dashboardRouteByRole: Record<UserRole, string> = {
-  SUPER_ADMIN: "/admin",
-  ADMIN: "/admin",
-  STAFF: "/staff",
-  CITIZEN: "/citizen",
-};
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  googleId: null | string;
+  authProvider: string;
+  emailVerified: boolean;
+  role: UserRole;
+  status: UserStatus;
+  needPasswordChange: boolean;
+  imageUrl: null | string;
+  imagePublicId: null | string;
+  isDeleted: boolean;
+  deletedAt: null | string;
+  createdAt: string;
+  updatedAt: string;
+}
  
