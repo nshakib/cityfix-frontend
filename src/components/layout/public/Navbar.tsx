@@ -23,6 +23,7 @@ const routes = [
 
 export default function Navbar() {
   const { data, isLoading } = useGetMe();
+
   console.log(data);
   const { mutate: logout } = useLogout();
   const queryClient = useQueryClient();
@@ -74,8 +75,10 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           {!isLoading && !data && (
             <>
-              <Button variant="ghost" asChild>
-                <Link href="/login">Log in</Link>
+              <Button variant="outline"
+              asChild
+              >
+              <Link href="/login">Login</Link>
               </Button>
               <Button asChild>
                 <Link href="/register">Report an Issue</Link>
