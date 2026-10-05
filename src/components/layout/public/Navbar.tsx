@@ -78,7 +78,7 @@ export default function Navbar() {
               <Button variant="outline"
               asChild
               >
-              <Link href="/login">Login</Link>
+                <Link href="/login">Login</Link>
               </Button>
               <Button asChild>
                 <Link href="/register">Report an Issue</Link>
