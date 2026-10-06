@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
 import {Spinner} from "../ui/spinner"
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -26,31 +27,37 @@ export default function LoginForm() {
 
   const { mutate: login, isPending: loginPending } = useLogin();
 
-  const form = useForm({
-    defaultValues: {
-      email: "admin@test.com",
-      password: "password123",
-    },
-    validators: {
-      onSubmit: loginSchema,
-    },
-    onSubmit: ({ value }) => {
-      const loginData = {
-        email: value.email,
-        password: value.password,
-      };
+  const queryClient = useQueryClient();
 
-      login(loginData, {
-        onSuccess: (res) => {
-          toast.success("Login successful");
-          router.push("/");
-        },
-        onError: (err) => {
-          toast.warning("Something went wrong. Please try again.");
-        },
-      });
-    },
-  });
+const form = useForm({
+  defaultValues: {
+    email: "admin@test.com",
+    password: "password123",
+  },
+  validators: {
+    onSubmit: loginSchema,
+  },
+  onSubmit: ({ value }) => {
+    const loginData = {
+      email: value.email,
+      password: value.password,
+    };
+
+    login(loginData, {
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: ["user"],
+        });
+
+        toast.success("Login successful");
+        router.push("/");
+      },
+      onError: () => {
+        toast.warning("Something went wrong. Please try again.");
+      },
+    });
+  },
+});
 
   return (
     <div className="flex flex-col gap-5">
