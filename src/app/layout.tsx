@@ -34,10 +34,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <Providers>
         <body className="min-h-full flex flex-col">
-          <Navbar  />
           <main className="flex-1">{children}</main>
-          <Toaster />   
-          <Footer />       
+          <Toaster />       
         </body>
       </Providers>
     </html>
