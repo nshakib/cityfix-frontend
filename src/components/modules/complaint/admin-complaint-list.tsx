@@ -1,17 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-
+import {
+  useAcknowledgeComplaint,
+  useAssignComplaint,
+  useGetAllComplaints,
+} from "@/hooks/complaints.hook";
+import { useGetStaffList } from "@/hooks/user.hook";
 import {
   complaintPriorities,
   complaintStatuses,
+  type Complaint,
   type ComplaintPriority,
   type ComplaintStatus,
 } from "@/types/complaints";
-import { useGetAllComplaints } from "@/hooks/complaints.hook";
 
 const PAGE_SIZE = 10;
 
@@ -21,14 +29,103 @@ const label = (value: string) => {
   return text.charAt(0).toUpperCase() + text.slice(1);
 };
 
+const errorMessage = (err: any, fallback: string) => err?.data?.message ?? fallback;
+
 const selectClass = "h-9 rounded-md border border-input bg-background px-3 text-sm";
+
+const statusHint: Partial<Record<ComplaintStatus, string>> = {
+  SUBMITTED: "New complaints. Acknowledge each one to review it for assignment.",
+  ACKNOWLEDGED: "Reviewed complaints waiting for a staff member.",
+};
+
+function AssignPanel({ complaint, onDone }: { complaint: Complaint; onDone: () => void }) {
+  const queryClient = useQueryClient();
+  const { data, isPending: isLoadingStaff, isError } = useGetStaffList(complaint.departmentId);
+  const { mutate: assign, isPending } = useAssignComplaint();
+  const [staffId, setStaffId] = useState("");
+
+  const staff = data?.data ?? [];
+
+  const onAssign = () => {
+    assign(
+      { id: complaint.id, staffId },
+      {
+        onSuccess: () => {
+          const name = staff.find((s) => s.id === staffId)?.name ?? "staff member";
+          toast.success(`Assigned to ${name}`);
+          queryClient.invalidateQueries({ queryKey: ["complaints"] });
+          onDone();
+        },
+        onError: (err: any) =>
+          toast.error(errorMessage(err, "Could not assign this complaint. Please try again.")),
+      },
+    );
+  };
+
+  return (
+    <section
+      aria-label="Assign staff"
+      className="flex flex-col gap-4 rounded-lg border p-4 sm:max-w-md"
+    >
+      <div>
+        <h2 className="font-medium">
+          {complaint.assignedStaff ? "Reassign staff" : "Assign staff"}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {complaint.title} · {complaint.department.name}
+        </p>
+      </div>
+
+      {isLoadingStaff && <p className="text-sm text-muted-foreground">Loading staff...</p>}
+      {isError && <p className="text-sm text-destructive">Could not load staff.</p>}
+      {!isLoadingStaff && !isError && staff.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          No active staff in {complaint.department.name}. Add a staff member to this department
+          first.
+        </p>
+      )}
+
+      {staff.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="staff">Staff member</Label>
+          <select
+            id="staff"
+            className={selectClass}
+            value={staffId}
+            onChange={(e) => setStaffId(e.target.value)}
+          >
+            <option value="">Select a staff member</option>
+            {staff.map((member) => (
+              <option key={member.id} value={member.id}>
+                {member.name} ({member.email})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <Button onClick={onAssign} disabled={!staffId || isPending}>
+          {isPending ? "Assigning..." : "Assign"}
+        </Button>
+        <Button variant="outline" onClick={onDone}>
+          Cancel
+        </Button>
+      </div>
+    </section>
+  );
+}
 
 export default function AdminComplaintList() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
 
-  // Filters live in the URL so the sidebar's "New Complaints" link and page reloads just work.
+  const [assigning, setAssigning] = useState<Complaint | null>(null);
+  const { mutate: acknowledge, isPending: isAcknowledging } = useAcknowledgeComplaint();
+
+  // Filters live in the URL so the sidebar links and page reloads just work.
   const rawStatus = searchParams.get("status");
   const rawPriority = searchParams.get("priority");
   const status = complaintStatuses.includes(rawStatus as ComplaintStatus)
@@ -59,6 +156,17 @@ export default function AdminComplaintList() {
     router.push(query ? `${pathname}?${query}` : pathname);
   };
 
+  const handleAcknowledge = (complaint: Complaint) => {
+    acknowledge(complaint.id, {
+      onSuccess: () => {
+        toast.success("Complaint acknowledged");
+        queryClient.invalidateQueries({ queryKey: ["complaints"] });
+      },
+      onError: (err: any) =>
+        toast.error(errorMessage(err, "Could not acknowledge this complaint.")),
+    });
+  };
+
   const hasFilters = !!status || !!priority;
 
   return (
@@ -66,9 +174,13 @@ export default function AdminComplaintList() {
       <header>
         <h1 className="text-xl font-semibold">Complaints</h1>
         <p className="text-sm text-muted-foreground">
-          Every complaint across all departments.
+          {(status && statusHint[status]) ?? "Every complaint across all departments."}
         </p>
       </header>
+
+      {assigning && (
+        <AssignPanel key={assigning.id} complaint={assigning} onDone={() => setAssigning(null)} />
+      )}
 
       <div className="flex flex-wrap items-end gap-4">
         <div className="flex flex-col gap-2">
@@ -144,6 +256,7 @@ export default function AdminComplaintList() {
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Assigned to</th>
                 <th className="px-4 py-3 font-medium">Submitted</th>
+                <th className="px-4 py-3 text-right font-medium">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -177,6 +290,28 @@ export default function AdminComplaintList() {
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     {new Date(complaint.submittedAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
+                    {complaint.status === "SUBMITTED" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={isAcknowledging}
+                        onClick={() => handleAcknowledge(complaint)}
+                      >
+                        Acknowledge
+                      </Button>
+                    )}
+                    {complaint.status === "ACKNOWLEDGED" && (
+                      <Button size="sm" onClick={() => setAssigning(complaint)}>
+                        Assign staff
+                      </Button>
+                    )}
+                    {complaint.status === "ASSIGNED" && (
+                      <Button size="sm" variant="outline" onClick={() => setAssigning(complaint)}>
+                        Reassign
+                      </Button>
+                    )}
                   </td>
                 </tr>
               ))}

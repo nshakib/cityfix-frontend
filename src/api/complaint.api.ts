@@ -9,3 +9,14 @@ export function getAllComplaints(params?: GetAllComplaintsParams) {
     query: params,
   });
 }
+
+// SUBMITTED -> ACKNOWLEDGED
+export function acknowledgeComplaint(id: string) {
+  return apiClient(`/complaints/${id}/acknowledge`, { method: "PATCH" });
+}
+ 
+// ACKNOWLEDGED (or ASSIGNED, to reassign) -> ASSIGNED
+export function assignComplaint({ id, staffId }: { id: string; staffId: string }) {
+  return apiClient(`/complaints/${id}/assign`, { method: "PATCH", body: { staffId } });
+}
+ 

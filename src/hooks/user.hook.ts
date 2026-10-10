@@ -1,5 +1,5 @@
-import { useMutation } from "@tanstack/react-query";
-import { changePassword, updateProfile } from "@/api/user.api";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { changePassword, getStaffList, updateProfile } from "@/api/user.api";
 
 export function useUpdateProfile() {
   return useMutation({
@@ -12,3 +12,12 @@ export function useChangePassword() {
     mutationFn: changePassword,
   });
 }
+
+export function useGetStaffList(departmentId?: string) {
+  return useQuery({
+    queryKey: ["staff", departmentId],
+    queryFn: () => getStaffList(departmentId as string),
+    enabled: !!departmentId,
+  });
+}
+ 

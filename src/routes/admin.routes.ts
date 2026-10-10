@@ -11,7 +11,10 @@ export const adminRoutes: SidebarItems = [
     title: "Complaints",
     items: [
       { title: "All Complaints", url: `${prefix}/complaints` },
-      { title: "Unassigned Queue", url: `${prefix}/complaints?status=UNDER_REVIEW` },
+      // SUBMITTED: new complaints the admin still has to acknowledge.
+      { title: "New Complaints", url: `${prefix}/complaints?status=SUBMITTED` },
+      // ACKNOWLEDGED: reviewed, waiting for a staff member.
+      { title: "Unassigned Queue", url: `${prefix}/complaints?status=ACKNOWLEDGED` },
     ],
   },
   {
