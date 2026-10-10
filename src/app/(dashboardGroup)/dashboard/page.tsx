@@ -1,9 +1,6 @@
-import React from 'react'
+import CitizenOverview from "@/components/dashboard/citizen-overview";
 
-const DashboardPage = () => {
-  return (
-    <div>DashboardPage</div>
-  )
+
+export default function CitizenPage() {
+  return <CitizenOverview />;
 }
-
-export default DashboardPage

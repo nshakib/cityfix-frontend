@@ -4,6 +4,10 @@ const prefix = "/dashboard";
 
 export const citizenRoutes: SidebarItems = [
   {
+    title: "Dashboard",
+    items: [{ title: "Home", url: `${prefix}` }],
+  },
+  {
     title: "Complaints",
     items: [
       { title: "Submit a Complaint", url: `${prefix}/complaints/new` },

@@ -47,3 +47,12 @@ export type GetAllComplaintsParams = {
   page?: number;
   limit?: number;
 };
+
+export type CreateComplaintPayload = {
+  title: string;
+  description: string;
+  location: string;
+  categoryId: string;
+};
+
+export type MyComplaint = Omit<Complaint, "citizen">;

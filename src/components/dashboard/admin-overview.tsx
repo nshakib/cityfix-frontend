@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { useGetMe } from "@/hooks/auth.hook";
 import { useGetAllComplaints } from "@/hooks/complaints.hook";
-import type { ComplaintStatus } from "@/types/complaints";
+import type { ComplaintStatus } from "@/types/complaints.type";
 
 // "IN_PROGRESS" -> "In progress"
 const label = (value: string) => {

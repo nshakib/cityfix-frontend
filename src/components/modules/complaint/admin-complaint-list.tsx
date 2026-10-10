@@ -19,7 +19,7 @@ import {
   type Complaint,
   type ComplaintPriority,
   type ComplaintStatus,
-} from "@/types/complaints";
+} from "@/types/complaints.type";
 
 const PAGE_SIZE = 10;
 

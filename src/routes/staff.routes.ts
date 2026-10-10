@@ -4,6 +4,10 @@ const prefix = "/staff";
 
 export const staffRoutes: SidebarItems = [
   {
+    title: "Dashboard",
+    items: [{ title: "Home", url: `${prefix}` }],
+  },
+  {
     title: "Complaints",
     items: [
       { title: "Assigned to Me", url: `${prefix}/complaints/assigned` },
