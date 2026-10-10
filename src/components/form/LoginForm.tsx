@@ -32,7 +32,7 @@ export default function LoginForm() {
 const form = useForm({
   defaultValues: {
     email: "admin@test.com",
-    password: "password123",
+    password: "Password@1234",
   },
   validators: {
     onSubmit: loginSchema,

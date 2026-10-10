@@ -4,8 +4,6 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import Providers from "@/providers";
 import { Toaster } from "@/components/ui/sonner";
-import Navbar from "@/components/layout/public/Navbar";
-import Footer from "@/components/layout/public/Footer";
 
 const outfitHeading = Outfit({subsets:['latin'],variable:'--font-heading'});
 

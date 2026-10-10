@@ -1,16 +1,4 @@
-export type GetAllComplaintsParams = {
-  status?: string;
-  priority?: string;
-  page?: number;
-  limit?: number;
-};
-
-export type ComplaintPriority =
-  | "LOW"
-  | "MEDIUM"
-  | "HIGH"
-  | "URGENT";
-
+// Mirrors prisma/schema/enums.prisma
 export type ComplaintStatus =
   | "SUBMITTED"
   | "ACKNOWLEDGED"
@@ -22,16 +10,40 @@ export type ComplaintStatus =
   | "DISPUTED"
   | "CLOSED";
 
-export interface Complaint {
+export type ComplaintPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+
+export const complaintStatuses: ComplaintStatus[] = [
+  "SUBMITTED",
+  "ACKNOWLEDGED",
+  "CONFIRMED",
+  "REJECTED",
+  "ASSIGNED",
+  "IN_PROGRESS",
+  "RESOLVED",
+  "DISPUTED",
+  "CLOSED",
+];
+
+export const complaintPriorities: ComplaintPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
+
+// Row returned by GET /complaints (includes from getAllComplaints in complaint.service.ts)
+export type Complaint = {
   id: string;
   title: string;
   description: string;
   location: string;
-  photos: string[];
-  categoryId: string;
-  userId: string;
-  priority: ComplaintPriority;
   status: ComplaintStatus;
-  createdAt: string;
-  updatedAt: string;
-}
+  priority: ComplaintPriority;
+  submittedAt: string;
+  category: { name: string };
+  department: { name: string };
+  assignedStaff: { name: string; email?: string } | null;
+  citizen: { name: string; email?: string; citizen?: { contactNumber: string | null } | null };
+};
+
+export type GetAllComplaintsParams = {
+  status?: ComplaintStatus;
+  priority?: ComplaintPriority;
+  page?: number;
+  limit?: number;
+};

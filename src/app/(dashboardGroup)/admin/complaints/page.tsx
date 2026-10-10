@@ -1,30 +1,12 @@
-"use client";
-
-import { useGetAllComplaints } from "@/hooks/complaints.hook";
-
-const ComplaintsPage = () => {
-
-    const { data } = useGetAllComplaints({ page: 1, limit: 100 });
-
-    const complaints = data?.data || [];
-  
-    if (complaints.length === 0) {
-    return <p>There is not complaints</p>;
-  }
+import AdminComplaintList from "@/components/modules/complaint/admin-complaint-list";
+import { Suspense } from "react";
 
 
+export default function ComplaintsPage() {
+  // useSearchParams (used inside the list) needs a Suspense boundary.
   return (
-    <div>
-      {complaints.map((complaint) => (
-        <div key={complaint.id}>
-          <h2>{complaint.title}</h2>
-          <p>{complaint.description}</p>
-          <p>Status: {complaint.status}</p>
-          <p>Priority: {complaint.priority}</p>
-        </div>
-      ))}
-    </div>
+    <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Loading complaints...</div>}>
+      <AdminComplaintList />
+    </Suspense>
   );
-};
-
-export default ComplaintsPage;
+}

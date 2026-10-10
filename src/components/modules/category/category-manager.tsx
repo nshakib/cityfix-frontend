@@ -16,9 +16,9 @@ import {
   useUpdateCategoryStatus,
 } from "@/hooks/category.hook";
 import { useGetDepartments } from "@/hooks/department.hook";
-import type { Category } from "@/types/category.type";
+import type { Category} from "@/types/category.type";
 import type { Department } from "@/types/department.type";
-import { categorySchema, type CategorySchemaType } from "@/validation/category.validation";
+import { categorySchema, CategorySchemaType} from "@/validation/category.validation";
 
 const errorMessage = (err: any, fallback: string) => err?.data?.message ?? fallback;
 

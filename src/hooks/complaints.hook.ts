@@ -1,10 +1,12 @@
-import { getAllComplaints } from "@/api";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { getAllComplaints } from "@/api/complaint.api";
 import { GetAllComplaintsParams } from "@/types/complaints";
-import { useQuery } from "@tanstack/react-query";
 
-export function useGetAllComplaints(params: GetAllComplaintsParams) {
-return useQuery({
-        queryKey:['complaints',params],
-        queryFn:() => getAllComplaints(params)
-    })
+
+export function useGetAllComplaints(params?: GetAllComplaintsParams) {
+  return useQuery({
+    queryKey: ["complaints", params],
+    queryFn: () => getAllComplaints(params),
+    placeholderData: keepPreviousData, // keeps the table visible while the next page loads
+  });
 }
