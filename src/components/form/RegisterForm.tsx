@@ -5,35 +5,38 @@ import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
+import type z from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-  FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { citizenRegistrationSchema } from "@/validation";
-import z from "zod";
 import { useRegistration } from "@/hooks";
-import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/error";
+import {
+  citizenRegistrationSchema,
+  normalizePhone,
+} from "@/validation/auth.validation";
 import { Spinner } from "../ui/spinner";
+
+type CitizenDefaultValues = z.infer<typeof citizenRegistrationSchema>;
+
+const defaultValues: CitizenDefaultValues = {
+  name: "",
+  email: "",
+  contactNumber: "",
+  password: "",
+  confirmPassword: "",
+};
 
 export function RegisterForm() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  type CitizenDefaultValues = z.infer<typeof citizenRegistrationSchema>;
-
-  const defaultValues: CitizenDefaultValues = {
-    name: "Nazmus Shakib",
-    email: "nshakib.dev@gmail.com",
-    contactNumber: "01762436220",
-    password: "@User123456",
-    confirmPassword: "@User123456",
-  };
 
   const { mutate: registration, isPending: registrationPending } =
     useRegistration();
@@ -44,37 +47,32 @@ export function RegisterForm() {
       onSubmit: citizenRegistrationSchema,
     },
     onSubmit: async ({ value }) => {
+      const email = value.email.trim().toLowerCase();
+
       const registrationData = {
-        name: value.name,
-        email: value.email,
+        name: value.name.trim(),
+        email,
         password: value.password,
         citizen: {
-          contactNumber: value.contactNumber,
+          contactNumber: value.contactNumber
+            ? normalizePhone(value.contactNumber)
+            : "",
         },
       };
 
       registration(registrationData, {
-        onSuccess: (res) => {
-          if (!res.success) {
-            toast.error(
-              "Something went wrong. Please try again");
-          }
-
-          toast.success({
-            title: "Registration Successful",
-            description: "Please verify your account",
-            type: "success",
+        // ofetch throws on non-2xx responses, so onSuccess only runs when the API succeeded.
+        onSuccess: () => {
+          toast.success("Registration successful", {
+            description: "We sent a 6-digit code to your email.",
           });
-          const params = new URLSearchParams({ email: registrationData.email });
+          const params = new URLSearchParams({ email });
           router.push(`/register/verify-account?${params.toString()}`);
         },
         onError: (err) => {
-          toast.error({
-            title: "Authorization failure",
-            description:
-              err.message || "Something went wrong. Please try again",
-            type: "error",
-          });
+          toast.error(
+            getErrorMessage(err, "Something went wrong. Please try again."),
+          );
         },
       });
     },
@@ -140,7 +138,7 @@ export function RegisterForm() {
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                       aria-invalid={isInvalid}
-                      autoComplete="off"
+                      autoComplete="email"
                     />
                   </div>
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
@@ -166,7 +164,7 @@ export function RegisterForm() {
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                       aria-invalid={isInvalid}
-                      autoComplete="off"
+                      autoComplete="tel"
                     />
                   </div>
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
@@ -194,7 +192,7 @@ export function RegisterForm() {
                       onChange={(e) => field.handleChange(e.target.value)}
                       aria-invalid={isInvalid}
                       className="pr-10"
-                      autoComplete="off"
+                      autoComplete="new-password"
                     />
                     <button
                       type="button"
@@ -235,7 +233,7 @@ export function RegisterForm() {
                       onChange={(e) => field.handleChange(e.target.value)}
                       aria-invalid={isInvalid}
                       className="pr-10"
-                      autoComplete="off"
+                      autoComplete="new-password"
                     />
                     <button
                       type="button"
@@ -263,18 +261,19 @@ export function RegisterForm() {
           <Button disabled={registrationPending} type="submit">
             {registrationPending ? (
               <>
-                <Spinner /> submitting
+                <Spinner /> Submitting
               </>
             ) : (
-              "Submit"
+              "Create account"
             )}
           </Button>
         </FieldGroup>
       </form>
 
-      <FieldSeparator>Or continue with</FieldSeparator>
-
-      {/* <GoogleLoginComponent /> */}
+      {/*
+        Google sign-up: restore the "Or continue with" separator (FieldSeparator)
+        together with <GoogleLoginComponent /> once it's ready.
+      */}
 
       <div className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}

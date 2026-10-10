@@ -20,6 +20,12 @@ export function useVerifyAccount() {
   });
 }
 
+export function useResendOtp() {
+  return useMutation({
+    mutationFn: useResendOtp,
+  });
+}
+
 export function useRegistration() {
   return useMutation({
     mutationFn: userRegistration,
