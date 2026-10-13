@@ -10,10 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useGetCategories } from "@/hooks/category.hook";
 import { useDisputeFine, useGetMyFines } from "@/hooks/fine.hook";
+import { useBkashPayment, useStripeCheckout } from "@/hooks/payment.hook";
 import { fineStatuses, type Fine, type FineStatus } from "@/types/fine.type";
 import { disputeSchema, type DisputeSchemaType } from "@/validation/fine.validation";
 
 const PAGE_SIZE = 10;
+
+// Fines the citizen can still pay.
+const payableStatuses: FineStatus[] = ["ISSUED", "UPHELD", "OVERDUE"];
 
 const errorMessage = (err: any, fallback: string) => err?.data?.message ?? fallback;
 
@@ -42,6 +46,55 @@ function statusMessage(fine: Fine): string {
     case "VOIDED":
       return "This fine was cancelled.";
   }
+}
+
+function PayActions({ fine }: { fine: Fine }) {
+  const { mutate: payStripe, isPending: stripePending } = useStripeCheckout();
+  const { mutate: payBkash, isPending: bkashPending } = useBkashPayment();
+  const [redirecting, setRedirecting] = useState(false);
+  const busy = stripePending || bkashPending || redirecting;
+
+  // Both gateways reply with a hosted payment page, so send the browser there.
+  const goTo = (url?: string) => {
+    if (!url) {
+      toast.error("The payment page could not be opened. Please try again.");
+      return;
+    }
+    setRedirecting(true);
+    window.location.href = url;
+  };
+
+  return (
+    <>
+      <Button
+        size="sm"
+        disabled={busy}
+        onClick={() =>
+          payStripe(fine.id, {
+            onSuccess: (res) => goTo(res.data?.checkoutUrl),
+            onError: (err: any) =>
+              toast.error(errorMessage(err, "Could not start the Stripe payment. Please try again.")),
+          })
+        }
+      >
+        {stripePending ? "Opening Stripe..." : "Pay with Stripe"}
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={busy}
+        onClick={() =>
+          payBkash(fine.id, {
+            onSuccess: (res) => goTo(res.data?.bkashURL),
+            onError: (err: any) =>
+              toast.error(errorMessage(err, "Could not start the bKash payment. Please try again.")),
+          })
+        }
+      >
+        {bkashPending ? "Opening bKash..." : "Pay with bKash"}
+      </Button>
+    </>
+  );
 }
 
 function DisputeForm({ fine, onDone }: { fine: Fine; onDone: () => void }) {
@@ -195,16 +248,17 @@ export default function MyFinesList() {
               </p>
             )}
 
-            {fine.status === "ISSUED" && disputingId !== fine.id && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="self-start"
-                onClick={() => setDisputingId(fine.id)}
-              >
-                Dispute this fine
-              </Button>
-            )}
+            {disputingId !== fine.id &&
+              (payableStatuses.includes(fine.status) || fine.status === "ISSUED") && (
+                <div className="flex flex-wrap gap-2">
+                  {payableStatuses.includes(fine.status) && <PayActions fine={fine} />}
+                  {fine.status === "ISSUED" && (
+                    <Button size="sm" variant="ghost" onClick={() => setDisputingId(fine.id)}>
+                      Dispute this fine
+                    </Button>
+                  )}
+                </div>
+              )}
 
             {disputingId === fine.id && (
               <DisputeForm fine={fine} onDone={() => setDisputingId(null)} />
