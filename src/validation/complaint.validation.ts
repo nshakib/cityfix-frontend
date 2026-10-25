@@ -21,3 +21,14 @@ export const complaintSchema = z.object({
 });
 
 export type ComplaintSchemaType = z.infer<typeof complaintSchema>;
+
+// Mirrors disputeComplaintSchema on the backend (body part).
+export const disputeComplaintSchema = z.object({
+  reason: z
+    .string()
+    .trim()
+    .min(10, "Please explain in at least 10 characters")
+    .max(500, "Reason cannot exceed 500 characters"),
+});
+
+export type DisputeComplaintSchemaType = z.infer<typeof disputeComplaintSchema>;

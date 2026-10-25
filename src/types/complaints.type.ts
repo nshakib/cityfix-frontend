@@ -35,6 +35,8 @@ export type Complaint = {
   status: ComplaintStatus;
   priority: ComplaintPriority;
   submittedAt: string;
+  departmentId: string; // scalar column, returned alongside the includes
+  resolutionProof: string | null; // JSON string like {"note": "..."} saved when staff resolve it
   category: { name: string };
   department: { name: string };
   assignedStaff: { name: string; email?: string } | null;
@@ -48,6 +50,7 @@ export type GetAllComplaintsParams = {
   limit?: number;
 };
 
+// POST /complaints (citizen). Priority is left to the backend default (MEDIUM); an admin can change it.
 export type CreateComplaintPayload = {
   title: string;
   description: string;
@@ -55,4 +58,5 @@ export type CreateComplaintPayload = {
   categoryId: string;
 };
 
+// Row returned by GET /complaints/my-complaints (the citizen is the viewer, so no `citizen` field).
 export type MyComplaint = Omit<Complaint, "citizen">;

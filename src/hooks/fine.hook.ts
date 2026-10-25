@@ -1,6 +1,13 @@
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
-import { disputeFine, getMyFines } from "@/api/fine.api";
-import type { GetMyFinesParams } from "@/types/fine.type";
+import {
+  createFine,
+  disputeFine,
+  getAllFines,
+  getComplaintsForFine,
+  getMyFines,
+  reviewFine,
+} from "@/api/fine.api";
+import type { GetAllFinesParams, GetMyFinesParams } from "@/types/fine.type";
 
 export function useGetMyFines(params?: GetMyFinesParams) {
   return useQuery({
@@ -13,5 +20,32 @@ export function useGetMyFines(params?: GetMyFinesParams) {
 export function useDisputeFine() {
   return useMutation({
     mutationFn: disputeFine,
+  });
+}
+
+export function useCreateFine() {
+  return useMutation({
+    mutationFn: createFine,
+  });
+}
+
+export function useComplaintsForFine() {
+  return useQuery({
+    queryKey: ["complaints", "for-fine"],
+    queryFn: getComplaintsForFine,
+  });
+}
+
+export function useGetAllFines(params?: GetAllFinesParams) {
+  return useQuery({
+    queryKey: ["fines", "all", params],
+    queryFn: () => getAllFines(params),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useReviewFine() {
+  return useMutation({
+    mutationFn: reviewFine,
   });
 }

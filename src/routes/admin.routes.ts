@@ -19,7 +19,10 @@ export const adminRoutes: SidebarItems = [
   },
   {
     title: "Fines",
-    items: [{ title: "All Fines", url: `${prefix}/fines` }],
+    items: [
+      { title: "All Fines", url: `${prefix}/fines` },
+      { title: "Disputed Fines", url: `${prefix}/fines?status=DISPUTED` },
+    ],
   },
   {
     title: "Configuration",

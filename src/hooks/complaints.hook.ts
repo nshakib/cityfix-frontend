@@ -1,7 +1,14 @@
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
-import { acknowledgeComplaint, assignComplaint, createComplaint, getAllComplaints, getMyComplaints } from "@/api/complaint.api";
-import { GetAllComplaintsParams } from "@/types/complaints.type";
-
+import {
+  acknowledgeComplaint,
+  assignComplaint,
+  confirmComplaint,
+  createComplaint,
+  disputeComplaint,
+  getAllComplaints,
+  getMyComplaints,
+} from "@/api/complaint.api";
+import type { GetAllComplaintsParams } from "@/types/complaints.type";
 
 export function useGetAllComplaints(params?: GetAllComplaintsParams) {
   return useQuery({
@@ -16,7 +23,7 @@ export function useAcknowledgeComplaint() {
     mutationFn: acknowledgeComplaint,
   });
 }
- 
+
 export function useAssignComplaint() {
   return useMutation({
     mutationFn: assignComplaint,
@@ -28,10 +35,22 @@ export function useCreateComplaint() {
     mutationFn: createComplaint,
   });
 }
- 
+
 export function useGetMyComplaints() {
   return useQuery({
     queryKey: ["complaints", "mine"], // starts with "complaints", so creating or changing a complaint refreshes it
     queryFn: getMyComplaints,
+  });
+}
+
+export function useConfirmComplaint() {
+  return useMutation({
+    mutationFn: confirmComplaint,
+  });
+}
+
+export function useDisputeComplaint() {
+  return useMutation({
+    mutationFn: disputeComplaint,
   });
 }

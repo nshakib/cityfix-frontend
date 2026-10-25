@@ -2,15 +2,27 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useGetMyComplaints } from "@/hooks/complaints.hook";
+import {
+  useConfirmComplaint,
+  useDisputeComplaint,
+  useGetMyComplaints,
+} from "@/hooks/complaints.hook";
 import {
   complaintStatuses,
+  type ComplaintStatus,
   type MyComplaint,
 } from "@/types/complaints.type";
-import { ComplaintStatus } from "@/types/complaints.type";
+import {
+  disputeComplaintSchema,
+  type DisputeComplaintSchemaType,
+} from "@/validation/complaint.validation";
 
 // "IN_PROGRESS" -> "In progress"
 const label = (value: string) => {
@@ -43,6 +55,105 @@ function statusMessage(complaint: MyComplaint): string {
     default:
       return "";
   }
+}
+
+const errorMessage = (err: any, fallback: string) => err?.data?.message ?? fallback;
+
+// Staff save their proof as a JSON string like {"note": "..."}.
+function resolutionNote(proof: string | null): string | null {
+  if (!proof) return null;
+  try {
+    const parsed = JSON.parse(proof);
+    return typeof parsed?.note === "string" && parsed.note ? parsed.note : null;
+  } catch {
+    return proof;
+  }
+}
+
+function ResolvedActions({ complaint }: { complaint: MyComplaint }) {
+  const queryClient = useQueryClient();
+  const { mutate: confirm, isPending: isConfirming } = useConfirmComplaint();
+  const { mutate: dispute, isPending: isDisputing } = useDisputeComplaint();
+  const [disputing, setDisputing] = useState(false);
+  const note = resolutionNote(complaint.resolutionProof);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<DisputeComplaintSchemaType>({
+    resolver: zodResolver(disputeComplaintSchema),
+    defaultValues: { reason: "" },
+  });
+
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ["complaints"] });
+
+  const onConfirm = () =>
+    confirm(complaint.id, {
+      onSuccess: () => {
+        toast.success("Thank you. The complaint is now closed.");
+        refresh();
+      },
+      onError: (err: any) =>
+        toast.error(errorMessage(err, "Could not confirm this complaint. Please try again.")),
+    });
+
+  const onDispute = ({ reason }: DisputeComplaintSchemaType) =>
+    dispute(
+      { id: complaint.id, reason },
+      {
+        onSuccess: () => {
+          toast.success("Dispute sent. The team will look at it again.");
+          refresh();
+        },
+        onError: (err: any) =>
+          toast.error(errorMessage(err, "Could not send your dispute. Please try again.")),
+      },
+    );
+
+  return (
+    <div className="flex flex-col gap-3 rounded-md bg-muted/40 p-3">
+      {note && (
+        <p className="text-sm">
+          <span className="text-muted-foreground">What staff reported: </span>
+          {note}
+        </p>
+      )}
+
+      {!disputing ? (
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" disabled={isConfirming} onClick={onConfirm}>
+            {isConfirming ? "Confirming..." : "It is fixed"}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setDisputing(true)}>
+            It is not fixed
+          </Button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit(onDispute)} className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor={`dispute-${complaint.id}`}>What is still wrong?</Label>
+            <textarea
+              id={`dispute-${complaint.id}`}
+              rows={3}
+              aria-invalid={!!errors.reason}
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+              {...register("reason")}
+            />
+            {errors.reason && <p className="text-sm text-destructive">{errors.reason.message}</p>}
+          </div>
+          <div className="flex gap-2">
+            <Button type="submit" size="sm" disabled={isDisputing}>
+              {isDisputing ? "Sending..." : "Send dispute"}
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={() => setDisputing(false)}>
+              Cancel
+            </Button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
 }
 
 export default function MyComplaintsList() {
@@ -130,6 +241,8 @@ export default function MyComplaintsList() {
             <p className="line-clamp-2 text-sm">{complaint.description}</p>
 
             <p className="text-sm text-muted-foreground">{statusMessage(complaint)}</p>
+
+            {complaint.status === "RESOLVED" && <ResolvedActions complaint={complaint} />}
 
             <dl className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
               <div className="flex gap-1">
